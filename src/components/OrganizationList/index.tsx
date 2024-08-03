@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 
 import { useAppSelector } from "@app/hooks";
 import { organizationsActions } from "@app/store/organizatonsSlice";
+import { Box } from "@mui/material";
 
 import OrganizationTable from "../OrganizationTable";
 
@@ -23,12 +24,26 @@ const OrganizationList: FC = () => {
     dispatch(organizationsActions.update(updatedOrganizations));
   };
 
+  const handleDeleteOrganization = (id: string) => {
+    dispatch(organizationsActions.deleteByIds([id]));
+  };
+
+  const handleDeleteSelected = () => {
+    const updatedOrganizations = organizations.filter((organization) => !organization.isSelected);
+    dispatch(organizationsActions.update(updatedOrganizations));
+  };
+
   return (
-    <OrganizationTable
-      organizations={organizations}
-      onSelectOrganization={handleSelectOrganization}
-      onSelectAll={handleSelectAll}
-    />
+    <Box className="organization-list">
+      {/* add organization */}
+      {/* delete selected */}
+      <OrganizationTable
+        organizations={organizations}
+        onSelectOrganization={handleSelectOrganization}
+        onSelectAll={handleSelectAll}
+        onDeleteOrganization={handleDeleteOrganization}
+      />
+    </Box>
   );
 };
 

@@ -3,7 +3,7 @@ import { ComponentProps, FC, useState } from "react";
 import { mergeSx } from "@app/lib";
 import { Organization } from "@app/types";
 import { Checkbox, Table } from "@app/uikit";
-import { SxProps, Typography } from "@mui/material";
+import { Button, SxProps, Typography } from "@mui/material";
 import { blue } from "@mui/material/colors";
 
 type CheckboxOnChangeHandler = ComponentProps<typeof Checkbox>["onChange"];
@@ -22,9 +22,15 @@ type OrganizationTableProps = {
   organizations: Organization[];
   onSelectOrganization: (id: string, isSelected: boolean) => void;
   onSelectAll: (isSelected: boolean) => void;
+  onDeleteOrganization: (id: string) => void;
 };
 
-const OrganizationTable: FC<OrganizationTableProps> = ({ organizations, onSelectOrganization, onSelectAll }) => {
+const OrganizationTable: FC<OrganizationTableProps> = ({
+  organizations,
+  onSelectOrganization,
+  onSelectAll,
+  onDeleteOrganization,
+}) => {
   const [isAllSelected, setAllSelected] = useState(false);
 
   const handleSelectOrganization = (id: string) => {
@@ -39,8 +45,12 @@ const OrganizationTable: FC<OrganizationTableProps> = ({ organizations, onSelect
     onSelectAll(checked);
   };
 
+  const handleDeleteOrganization = (id: string) => {
+    return () => onDeleteOrganization(id);
+  };
+
   return (
-    <Table sx={{ gridTemplateColumns: "auto 1fr 3fr", overflow: "clip" }}>
+    <Table sx={{ gridTemplateColumns: "auto 1fr 3fr auto", overflow: "clip" }}>
       <Table.Head>
         <Table.Row>
           <Table.HeaderCell sx={stickyCellStyles}>
@@ -52,6 +62,7 @@ const OrganizationTable: FC<OrganizationTableProps> = ({ organizations, onSelect
           <Table.HeaderCell sx={stickyCellStyles}>
             <Typography>Адрес</Typography>
           </Table.HeaderCell>
+          <Table.HeaderCell sx={stickyCellStyles}></Table.HeaderCell>
         </Table.Row>
       </Table.Head>
       <Table.Body>
@@ -72,6 +83,11 @@ const OrganizationTable: FC<OrganizationTableProps> = ({ organizations, onSelect
               </Table.DataCell>
               <Table.DataCell {...cellProps}>
                 <Typography>{address}</Typography>
+              </Table.DataCell>
+              <Table.DataCell {...cellProps}>
+                <Button variant="text" size="small" onClick={handleDeleteOrganization(id)}>
+                  Удалить
+                </Button>
               </Table.DataCell>
             </Table.Row>
           );
