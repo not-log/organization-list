@@ -2,11 +2,11 @@ import { createOrganizationList } from "@app/lib";
 import { Organization } from "@app/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const initialState = createOrganizationList(10);
+const initialState = createOrganizationList(100);
 
 type UpdatedActionPayload = {
   id: string;
-  updatedParams: Omit<Organization, "id">;
+  updatedParams: Partial<Omit<Organization, "id">>;
 };
 
 const organizationsSlice = createSlice({
@@ -29,8 +29,11 @@ const organizationsSlice = createSlice({
         state[currentOrganizationIndex] = { ...oldOrganization, ...updatedParams };
       }
     },
+    pushMany(state, action: PayloadAction<number>) {
+      state.push(...createOrganizationList(action.payload));
+    },
   },
 });
 
-export const { addFirst, deleteByIds, updateById } = organizationsSlice.actions;
+export const organizationsActions = organizationsSlice.actions;
 export default organizationsSlice;

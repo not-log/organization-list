@@ -1,3 +1,4 @@
+import Checkbox from "./Checkbox";
 import Table from "./Table";
 
-export { Table };
+export { Checkbox, Table };
