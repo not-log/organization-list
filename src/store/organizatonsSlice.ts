@@ -29,6 +29,9 @@ const organizationsSlice = createSlice({
         state[currentOrganizationIndex] = { ...oldOrganization, ...updatedParams };
       }
     },
+    update(_, action: PayloadAction<typeof initialState>) {
+      return action.payload;
+    },
     pushMany(state, action: PayloadAction<number>) {
       state.push(...createOrganizationList(action.payload));
     },

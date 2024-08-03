@@ -1,10 +1,12 @@
-import { ComponentProps, FC } from "react";
+import { ComponentProps, FC, useState } from "react";
 
 import { mergeSx } from "@app/lib";
 import { Organization } from "@app/types";
 import { Checkbox, Table } from "@app/uikit";
 import { SxProps, Typography } from "@mui/material";
 import { blue } from "@mui/material/colors";
+
+type CheckboxOnChangeHandler = ComponentProps<typeof Checkbox>["onChange"];
 
 const stickyCellStyles: SxProps = {
   zIndex: 10,
@@ -18,15 +20,23 @@ const selectedCellStyles: SxProps = {
 
 type OrganizationTableProps = {
   organizations: Organization[];
-  onRowSelect: (id: string, isSelected: boolean) => void;
+  onSelectOrganization: (id: string, isSelected: boolean) => void;
+  onSelectAll: (isSelected: boolean) => void;
 };
 
-const OrganizationTable: FC<OrganizationTableProps> = ({ organizations, onRowSelect }) => {
-  const handleRowSelect = (id: string) => {
-    const handler: ComponentProps<typeof Checkbox>["onChange"] = (_, checked) => {
-      onRowSelect(id, checked);
+const OrganizationTable: FC<OrganizationTableProps> = ({ organizations, onSelectOrganization, onSelectAll }) => {
+  const [isAllSelected, setAllSelected] = useState(false);
+
+  const handleSelectOrganization = (id: string) => {
+    const handler: CheckboxOnChangeHandler = (_, checked) => {
+      onSelectOrganization(id, checked);
     };
     return handler;
+  };
+
+  const handleSelectAll: CheckboxOnChangeHandler = (_, checked) => {
+    setAllSelected(checked);
+    onSelectAll(checked);
   };
 
   return (
@@ -34,7 +44,7 @@ const OrganizationTable: FC<OrganizationTableProps> = ({ organizations, onRowSel
       <Table.Head>
         <Table.Row>
           <Table.HeaderCell sx={stickyCellStyles}>
-            <Checkbox />
+            <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
           </Table.HeaderCell>
           <Table.HeaderCell sx={stickyCellStyles}>
             <Typography>Компания</Typography>
@@ -55,7 +65,7 @@ const OrganizationTable: FC<OrganizationTableProps> = ({ organizations, onRowSel
           return (
             <Table.Row key={id}>
               <Table.DataCell {...cellProps}>
-                <Checkbox checked={isSelected} onChange={handleRowSelect(id)} />
+                <Checkbox checked={isSelected} onChange={handleSelectOrganization(id)} />
               </Table.DataCell>
               <Table.DataCell {...cellProps}>
                 <Typography>{name}</Typography>

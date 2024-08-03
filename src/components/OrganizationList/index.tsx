@@ -11,11 +11,25 @@ const OrganizationList: FC = () => {
 
   const dispatch = useDispatch();
 
-  const handleRowSelect = (id: string, isSelected: boolean) => {
+  const handleSelectOrganization = (id: string, isSelected: boolean) => {
     dispatch(organizationsActions.updateById({ id, updatedParams: { isSelected } }));
   };
 
-  return <OrganizationTable organizations={organizations} onRowSelect={handleRowSelect} />;
+  const handleSelectAll = (isSelected: boolean) => {
+    const updatedOrganizations = organizations.map((organization) => ({
+      ...organization,
+      isSelected,
+    }));
+    dispatch(organizationsActions.update(updatedOrganizations));
+  };
+
+  return (
+    <OrganizationTable
+      organizations={organizations}
+      onSelectOrganization={handleSelectOrganization}
+      onSelectAll={handleSelectAll}
+    />
+  );
 };
 
 export default OrganizationList;
