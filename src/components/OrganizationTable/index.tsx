@@ -6,6 +6,8 @@ import { Checkbox, Table } from "@app/uikit";
 import { Button, SxProps, Typography } from "@mui/material";
 import { blue } from "@mui/material/colors";
 
+import EditableField from "../EditableField";
+
 type CheckboxOnChangeHandler = ComponentProps<typeof Checkbox>["onChange"];
 
 const stickyCellStyles: SxProps = {
@@ -79,7 +81,7 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
                 <Checkbox checked={isSelected} onChange={handleSelectOrganization(id)} />
               </Table.DataCell>
               <Table.DataCell {...cellProps}>
-                <Typography>{name}</Typography>
+                <EditableField>{name}</EditableField>
               </Table.DataCell>
               <Table.DataCell {...cellProps}>
                 <Typography>{address}</Typography>
