@@ -33,6 +33,14 @@ const OrganizationList: FC = () => {
     dispatch(organizationsActions.update(updatedOrganizations));
   };
 
+  const handleEditOrganizationName = (id: string, name: string) => {
+    dispatch(organizationsActions.updateById({ id, updatedParams: { name } }));
+  };
+
+  const handleEditOrganizationAddress = (id: string, address: string) => {
+    dispatch(organizationsActions.updateById({ id, updatedParams: { address } }));
+  };
+
   return (
     <Box className="organization-list">
       {/* add organization */}
@@ -42,6 +50,8 @@ const OrganizationList: FC = () => {
         onSelectOrganization={handleSelectOrganization}
         onSelectAll={handleSelectAll}
         onDeleteOrganization={handleDeleteOrganization}
+        onEditOrganizationName={handleEditOrganizationName}
+        onEditOrganizationAddress={handleEditOrganizationAddress}
       />
     </Box>
   );

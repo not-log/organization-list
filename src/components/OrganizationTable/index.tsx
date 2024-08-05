@@ -6,7 +6,7 @@ import { Checkbox, Table } from "@app/uikit";
 import { Button, SxProps, Typography } from "@mui/material";
 import { blue } from "@mui/material/colors";
 
-import EditableField from "../EditableField";
+import EditableTextField from "../EditableTextField";
 
 type CheckboxOnChangeHandler = ComponentProps<typeof Checkbox>["onChange"];
 
@@ -25,6 +25,8 @@ type OrganizationTableProps = {
   onSelectOrganization: (id: string, isSelected: boolean) => void;
   onSelectAll: (isSelected: boolean) => void;
   onDeleteOrganization: (id: string) => void;
+  onEditOrganizationName: (id: string, name: string) => void;
+  onEditOrganizationAddress: (id: string, address: string) => void;
 };
 
 const OrganizationTable: FC<OrganizationTableProps> = ({
@@ -32,6 +34,8 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
   onSelectOrganization,
   onSelectAll,
   onDeleteOrganization,
+  onEditOrganizationName,
+  onEditOrganizationAddress,
 }) => {
   const [isAllSelected, setAllSelected] = useState(false);
 
@@ -51,8 +55,21 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
     return () => onDeleteOrganization(id);
   };
 
+  const handleEditOrganizationName = (id: string) => {
+    return (name: string) => onEditOrganizationName(id, name);
+  };
+
+  const handleEditOrganizationAddress = (id: string) => {
+    return (address: string) => onEditOrganizationAddress(id, address);
+  };
+
   return (
-    <Table sx={{ gridTemplateColumns: "auto 1fr 3fr auto", overflow: "clip" }}>
+    <Table
+      sx={{
+        gridTemplateColumns: "auto minmax(auto, 240px) auto auto",
+        overflow: "clip",
+      }}
+    >
       <Table.Head>
         <Table.Row>
           <Table.HeaderCell sx={stickyCellStyles}>
@@ -72,7 +89,7 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
           const { id, name, address, isSelected } = organization;
 
           const cellProps = {
-            sx: mergeSx(isSelected && selectedCellStyles),
+            sx: mergeSx(isSelected && selectedCellStyles, { minWidth: 0 }),
           };
 
           return (
@@ -81,13 +98,13 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
                 <Checkbox checked={isSelected} onChange={handleSelectOrganization(id)} />
               </Table.DataCell>
               <Table.DataCell {...cellProps}>
-                <EditableField>{name}</EditableField>
+                <EditableTextField text={name} onChange={handleEditOrganizationName(id)} />
               </Table.DataCell>
               <Table.DataCell {...cellProps}>
-                <Typography>{address}</Typography>
+                <EditableTextField text={address} onChange={handleEditOrganizationAddress(id)} />
               </Table.DataCell>
               <Table.DataCell {...cellProps}>
-                <Button variant="text" size="small" onClick={handleDeleteOrganization(id)}>
+                <Button variant="text" color="warning" size="small" onClick={handleDeleteOrganization(id)}>
                   Удалить
                 </Button>
               </Table.DataCell>
