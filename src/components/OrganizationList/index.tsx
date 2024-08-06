@@ -1,16 +1,17 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import { useDispatch } from "react-redux";
 
 import { useAppSelector } from "@app/hooks";
 import { organizationsActions } from "@app/store/organizatonsSlice";
-import { Box } from "@mui/material";
+import { Box, Button, Collapse } from "@mui/material";
 
 import OrganizationTable from "../OrganizationTable";
 
 const OrganizationList: FC = () => {
+  const dispatch = useDispatch();
   const organizations = useAppSelector((state) => state.organizations);
 
-  const dispatch = useDispatch();
+  const [isCreateFormOpen, setCreateFormOpen] = useState(false);
 
   const handleSelectOrganization = (id: string, isSelected: boolean) => {
     dispatch(organizationsActions.updateById({ id, updatedParams: { isSelected } }));
@@ -28,7 +29,7 @@ const OrganizationList: FC = () => {
     dispatch(organizationsActions.deleteByIds([id]));
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelectedOrganizations = () => {
     const updatedOrganizations = organizations.filter((organization) => !organization.isSelected);
     dispatch(organizationsActions.update(updatedOrganizations));
   };
@@ -41,18 +42,32 @@ const OrganizationList: FC = () => {
     dispatch(organizationsActions.updateById({ id, updatedParams: { address } }));
   };
 
+  const toggleCreateForm = () => setCreateFormOpen((value) => !value);
+
   return (
     <Box className="organization-list">
-      {/* add organization */}
-      {/* delete selected */}
-      <OrganizationTable
-        organizations={organizations}
-        onSelectOrganization={handleSelectOrganization}
-        onSelectAll={handleSelectAll}
-        onDeleteOrganization={handleDeleteOrganization}
-        onEditOrganizationName={handleEditOrganizationName}
-        onEditOrganizationAddress={handleEditOrganizationAddress}
-      />
+      <Box sx={{ display: "flex", gap: "16px" }}>
+        <Button onClick={toggleCreateForm} variant="outlined">
+          Форма добавления {isCreateFormOpen ? "⬆️" : "⬇️"}
+        </Button>
+        <Button onClick={handleDeleteSelectedOrganizations} color="error" variant="contained">
+          Удалить выбранные
+        </Button>
+      </Box>
+      <Collapse in={isCreateFormOpen}>
+        <Box sx={{ height: "100px", marginTop: "16px" }}>add form</Box>
+      </Collapse>
+
+      <Box marginTop="32px">
+        <OrganizationTable
+          organizations={organizations}
+          onSelectOrganization={handleSelectOrganization}
+          onSelectAll={handleSelectAll}
+          onDeleteOrganization={handleDeleteOrganization}
+          onEditOrganizationName={handleEditOrganizationName}
+          onEditOrganizationAddress={handleEditOrganizationAddress}
+        />
+      </Box>
     </Box>
   );
 };
