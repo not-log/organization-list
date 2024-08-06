@@ -4,25 +4,12 @@ import { mergeSx } from "@app/lib";
 import { Organization } from "@app/types";
 import { Checkbox, Table } from "@app/uikit";
 import { Box, Button, SxProps, Typography } from "@mui/material";
-import { blue, grey } from "@mui/material/colors";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 
 import EditableTextField from "../EditableTextField";
+import * as styles from "./styles";
 
 type CheckboxOnChangeHandler = ComponentProps<typeof Checkbox>["onChange"];
-
-const stickyHeaderStyles: SxProps = {
-  zIndex: 10,
-  position: "sticky",
-  top: 0,
-  height: "max-content",
-
-  backgroundColor: grey[200],
-};
-
-const selectedCellStyles: SxProps = {
-  backgroundColor: blue[50],
-};
 
 type OrganizationTableProps = {
   organizations: Organization[];
@@ -49,56 +36,39 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
   const virtualizer = useWindowVirtualizer({
     count: organizations.length,
     estimateSize: () => 42,
-    overscan: 10,
-    scrollMargin: tableRef.current?.offsetTop ?? 0,
+    overscan: 20,
   });
-
-  const handleSelectOrganization = (id: string) => {
-    const handler: CheckboxOnChangeHandler = (_, checked) => {
-      onSelectOrganization(id, checked);
-    };
-    return handler;
-  };
 
   const handleSelectAll: CheckboxOnChangeHandler = (_, checked) => {
     setAllSelected(checked);
     onSelectAll(checked);
   };
 
-  const handleDeleteOrganization = (id: string) => {
-    return () => onDeleteOrganization(id);
-  };
+  const getEntityHandlers = (id: string) => {
+    const selectHandler: CheckboxOnChangeHandler = (_, checked) => {
+      onSelectOrganization(id, checked);
+    };
 
-  const handleEditOrganizationName = (id: string) => {
-    return (name: string) => onEditOrganizationName(id, name);
-  };
-
-  const handleEditOrganizationAddress = (id: string) => {
-    return (address: string) => onEditOrganizationAddress(id, address);
+    return {
+      delete: () => onDeleteOrganization(id),
+      editName: (name: string) => onEditOrganizationName(id, name),
+      editAddress: (address: string) => onEditOrganizationAddress(id, address),
+      select: selectHandler,
+    };
   };
 
   const virtualRows = virtualizer.getVirtualItems();
+  const headerHeight = tableHeaderRef.current?.offsetHeight ?? 0;
 
-  const tableGridTemplateColumns = "min-content 240px minmax(200px, auto) min-content";
+  const dynamicTableStyles: SxProps = {
+    height: `${virtualizer.getTotalSize() + headerHeight}px`,
+  };
 
   return (
-    <Box sx={{ border: "1px solid", borderColor: grey[500], borderRadius: "8px", overflow: "clip" }}>
-      <Table
-        ref={tableRef}
-        sx={{
-          tableLayout: "fixed",
-
-          position: "relative",
-          height: `${virtualizer.getTotalSize() + 37}px`,
-
-          "th:not(:first-of-type), td:not(:first-of-type)": {
-            borderLeft: "1px solid",
-            borderLeftColor: grey[500],
-          },
-        }}
-      >
-        <Table.Head ref={tableHeaderRef} sx={stickyHeaderStyles}>
-          <Table.Row display="grid" gridAutoFlow="column" gridTemplateColumns={tableGridTemplateColumns}>
+    <Box className="organization-table" sx={styles.root}>
+      <Table ref={tableRef} sx={mergeSx(styles.table, dynamicTableStyles)}>
+        <Table.Head ref={tableHeaderRef} sx={styles.stickyHeader}>
+          <Table.Row sx={styles.rowLayout}>
             <Table.HeaderCell>
               <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
             </Table.HeaderCell>
@@ -120,39 +90,33 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
             const { index, size, start } = virtualItem;
             const { id, name, address, isSelected } = organizations[index];
 
-            const positionStyles: SxProps = {
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
+            const handlers = getEntityHandlers(id);
+
+            const dynamicRowStyles: SxProps = {
               height: `${size}px`,
-              // ! TODO сделать отдельный расчет высоты хедера
-              transform: `translateY(${start + 37}px)`,
+              transform: `translateY(${start + headerHeight}px)`,
             };
 
-            const computedStyles = mergeSx(isSelected && selectedCellStyles, positionStyles);
+            const computedRowStyles = mergeSx(
+              styles.row,
+              styles.rowLayout,
+              dynamicRowStyles,
+              isSelected && styles.selectedRow,
+            );
 
             return (
-              <Table.Row
-                key={id}
-                data-index={index}
-                ref={virtualizer.measureElement}
-                sx={computedStyles}
-                display="grid"
-                gridAutoFlow="column"
-                gridTemplateColumns={tableGridTemplateColumns}
-              >
+              <Table.Row key={id} data-index={index} ref={virtualizer.measureElement} sx={computedRowStyles}>
                 <Table.DataCell>
-                  <Checkbox checked={isSelected} onChange={handleSelectOrganization(id)} />
+                  <Checkbox checked={isSelected} onChange={handlers.select} />
                 </Table.DataCell>
                 <Table.DataCell>
-                  <EditableTextField text={name} onChange={handleEditOrganizationName(id)} />
+                  <EditableTextField text={name} onChange={handlers.editName} />
                 </Table.DataCell>
                 <Table.DataCell display="grid">
-                  <EditableTextField text={address} onChange={handleEditOrganizationAddress(id)} />
+                  <EditableTextField text={address} onChange={handlers.editAddress} />
                 </Table.DataCell>
                 <Table.DataCell>
-                  <Button variant="text" color="warning" size="small" onClick={handleDeleteOrganization(id)}>
+                  <Button variant="text" color="warning" size="small" onClick={handlers.delete}>
                     Удалить
                   </Button>
                 </Table.DataCell>
