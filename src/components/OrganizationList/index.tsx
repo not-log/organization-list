@@ -1,15 +1,14 @@
-import { FC, useState } from "react";
-import { useDispatch } from "react-redux";
+import { FC, useCallback, useState } from "react";
 
-import { useAppSelector } from "@app/hooks";
-import { organizationsActions } from "@app/store/organizatonsSlice";
+import { useAppDispatch, useAppSelector } from "@app/hooks";
+import { organizationsActions, organizationThunks } from "@app/store/organizatonsSlice";
 import { Box, Button, Collapse } from "@mui/material";
 
 import OrganizationTable from "../OrganizationTable";
 
 const OrganizationList: FC = () => {
-  const dispatch = useDispatch();
-  const organizations = useAppSelector((state) => state.organizations);
+  const dispatch = useAppDispatch();
+  const { data: organizations, isLoading } = useAppSelector((state) => state.organizations);
 
   const [isCreateFormOpen, setCreateFormOpen] = useState(false);
 
@@ -31,6 +30,7 @@ const OrganizationList: FC = () => {
 
   const handleDeleteSelectedOrganizations = () => {
     const updatedOrganizations = organizations.filter((organization) => !organization.isSelected);
+    // ! странное название экшена -> replace ?
     dispatch(organizationsActions.update(updatedOrganizations));
   };
 
@@ -41,6 +41,10 @@ const OrganizationList: FC = () => {
   const handleEditOrganizationAddress = (id: string, address: string) => {
     dispatch(organizationsActions.updateById({ id, updatedParams: { address } }));
   };
+
+  const loadMoreOrganizations = useCallback(() => {
+    return dispatch(organizationThunks.loadMoreThunk());
+  }, [dispatch]);
 
   const toggleCreateForm = () => setCreateFormOpen((value) => !value);
 
@@ -61,11 +65,13 @@ const OrganizationList: FC = () => {
       <Box marginTop="32px">
         <OrganizationTable
           organizations={organizations}
+          isLoading={isLoading}
           onSelectOrganization={handleSelectOrganization}
           onSelectAll={handleSelectAll}
           onDeleteOrganization={handleDeleteOrganization}
           onEditOrganizationName={handleEditOrganizationName}
           onEditOrganizationAddress={handleEditOrganizationAddress}
+          onLoadMoreOrganizations={loadMoreOrganizations}
         />
       </Box>
     </Box>

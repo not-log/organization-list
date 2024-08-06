@@ -22,7 +22,7 @@ export const stickyHeader: SxProps = {
   zIndex: 10,
 
   position: "sticky",
-  top: 0,
+  top: "-1px",
   height: "max-content",
 
   backgroundColor: grey[200],

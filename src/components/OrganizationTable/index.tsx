@@ -1,9 +1,9 @@
-import { ComponentProps, FC, useRef, useState } from "react";
+import { ComponentProps, FC, useEffect, useRef, useState } from "react";
 
 import { mergeSx } from "@app/lib";
 import { Organization } from "@app/types";
 import { Checkbox, Table } from "@app/uikit";
-import { Box, Button, SxProps, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, SxProps, Typography } from "@mui/material";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 
 import EditableTextField from "../EditableTextField";
@@ -13,24 +13,28 @@ type CheckboxOnChangeHandler = ComponentProps<typeof Checkbox>["onChange"];
 
 type OrganizationTableProps = {
   organizations: Organization[];
+  isLoading: boolean;
   onSelectOrganization: (id: string, isSelected: boolean) => void;
   onSelectAll: (isSelected: boolean) => void;
   onDeleteOrganization: (id: string) => void;
   onEditOrganizationName: (id: string, name: string) => void;
   onEditOrganizationAddress: (id: string, address: string) => void;
+  onLoadMoreOrganizations: VoidFunction;
 };
 
 const OrganizationTable: FC<OrganizationTableProps> = ({
   organizations,
+  isLoading,
   onSelectOrganization,
   onSelectAll,
   onDeleteOrganization,
   onEditOrganizationName,
   onEditOrganizationAddress,
+  onLoadMoreOrganizations,
 }) => {
   const [isAllSelected, setAllSelected] = useState(false);
 
-  const tableRef = useRef<HTMLTableElement>(null);
+  const tableRef = useRef(null);
   const tableHeaderRef = useRef<HTMLTableSectionElement>(null);
 
   const virtualizer = useWindowVirtualizer({
@@ -38,6 +42,18 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
     estimateSize: () => 42,
     overscan: 20,
   });
+
+  const virtualItems = virtualizer.getVirtualItems();
+
+  useEffect(() => {
+    const lastItem = virtualItems[virtualItems.length - 1];
+
+    if (!lastItem) return;
+
+    if (lastItem.index >= organizations.length - 1 && !isLoading) {
+      onLoadMoreOrganizations();
+    }
+  }, [isLoading, onLoadMoreOrganizations, organizations.length, virtualItems]);
 
   const handleSelectAll: CheckboxOnChangeHandler = (_, checked) => {
     setAllSelected(checked);
@@ -57,7 +73,6 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
     };
   };
 
-  const virtualRows = virtualizer.getVirtualItems();
   const headerHeight = tableHeaderRef.current?.offsetHeight ?? 0;
 
   const dynamicTableStyles: SxProps = {
@@ -86,7 +101,7 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
           </Table.Row>
         </Table.Head>
         <Table.Body>
-          {virtualRows.map((virtualItem) => {
+          {virtualItems.map((virtualItem) => {
             const { index, size, start } = virtualItem;
             const { id, name, address, isSelected } = organizations[index];
 
@@ -123,6 +138,25 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
               </Table.Row>
             );
           })}
+
+          {isLoading && (
+            <Table.Row
+              sx={{
+                position: "absolute",
+                bottom: 0,
+                display: "grid",
+                placeItems: "center",
+                width: "100%",
+                paddingBlock: "120px 32px",
+
+                background: "linear-gradient(0deg, #ffffff 20%, transparent 100%)",
+              }}
+            >
+              <Table.DataCell>
+                <CircularProgress />
+              </Table.DataCell>
+            </Table.Row>
+          )}
         </Table.Body>
       </Table>
     </Box>

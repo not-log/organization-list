@@ -1,8 +1,20 @@
 import { createOrganizationList } from "@app/lib";
 import { Organization } from "@app/types";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const initialState = createOrganizationList(1000);
+const PAGE_SIZE = 10_000;
+
+const initialState = {
+  data: createOrganizationList(PAGE_SIZE),
+  isLoading: false,
+};
+
+const loadMoreThunk = createAsyncThunk("organizations/loadMore", async () => {
+  await new Promise((resolve) => {
+    setTimeout(resolve, 1000);
+  });
+  return createOrganizationList(PAGE_SIZE);
+});
 
 type UpdatedActionPayload = {
   id: string;
@@ -14,29 +26,42 @@ const organizationsSlice = createSlice({
   initialState,
   reducers: {
     addFirst(state, action: PayloadAction<Organization>) {
-      state.unshift(action.payload);
+      state.data.unshift(action.payload);
     },
     deleteByIds(state, action: PayloadAction<string[]>) {
-      return state.filter((organization) => !action.payload.includes(organization.id));
+      state.data = state.data.filter((organization) => !action.payload.includes(organization.id));
     },
     updateById(state, action: PayloadAction<UpdatedActionPayload>) {
       const { id, updatedParams } = action.payload;
 
-      const currentOrganizationIndex = state.findIndex((organization) => organization.id === id);
+      const currentOrganizationIndex = state.data.findIndex((organization) => organization.id === id);
 
       if (currentOrganizationIndex !== -1) {
-        const oldOrganization = state[currentOrganizationIndex];
-        state[currentOrganizationIndex] = { ...oldOrganization, ...updatedParams };
+        const oldOrganization = state.data[currentOrganizationIndex];
+        state.data[currentOrganizationIndex] = { ...oldOrganization, ...updatedParams };
       }
     },
-    update(_, action: PayloadAction<typeof initialState>) {
-      return action.payload;
-    },
-    pushMany(state, action: PayloadAction<number>) {
-      state.push(...createOrganizationList(action.payload));
+    update(state, action: PayloadAction<(typeof initialState)["data"]>) {
+      state.data = action.payload;
     },
   },
+  extraReducers: (builder) => {
+    builder.addCase(loadMoreThunk.pending, (state) => {
+      state.isLoading = true;
+    });
+    builder.addCase(loadMoreThunk.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.data.push(...action.payload);
+    });
+    builder.addCase(loadMoreThunk.rejected, (state) => {
+      state.isLoading = false;
+    });
+  },
 });
+
+export const organizationThunks = {
+  loadMoreThunk,
+};
 
 export const organizationsActions = organizationsSlice.actions;
 export default organizationsSlice;
