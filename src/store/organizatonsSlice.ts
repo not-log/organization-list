@@ -2,7 +2,7 @@ import { createOrganizationList } from "@app/lib";
 import { Organization } from "@app/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const initialState = createOrganizationList(100);
+const initialState = createOrganizationList(1000);
 
 type UpdatedActionPayload = {
   id: string;

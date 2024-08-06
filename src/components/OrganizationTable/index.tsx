@@ -1,19 +1,23 @@
-import { ComponentProps, FC, useState } from "react";
+import { ComponentProps, FC, useRef, useState } from "react";
 
 import { mergeSx } from "@app/lib";
 import { Organization } from "@app/types";
 import { Checkbox, Table } from "@app/uikit";
-import { Button, SxProps, Typography } from "@mui/material";
-import { blue } from "@mui/material/colors";
+import { Box, Button, SxProps, Typography } from "@mui/material";
+import { blue, grey } from "@mui/material/colors";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 
 import EditableTextField from "../EditableTextField";
 
 type CheckboxOnChangeHandler = ComponentProps<typeof Checkbox>["onChange"];
 
-const stickyCellStyles: SxProps = {
+const stickyHeaderStyles: SxProps = {
   zIndex: 10,
   position: "sticky",
   top: 0,
+  height: "max-content",
+
+  backgroundColor: grey[200],
 };
 
 const selectedCellStyles: SxProps = {
@@ -39,6 +43,16 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
 }) => {
   const [isAllSelected, setAllSelected] = useState(false);
 
+  const tableRef = useRef<HTMLTableElement>(null);
+  const tableHeaderRef = useRef<HTMLTableSectionElement>(null);
+
+  const virtualizer = useWindowVirtualizer({
+    count: organizations.length,
+    estimateSize: () => 42,
+    overscan: 10,
+    scrollMargin: tableRef.current?.offsetTop ?? 0,
+  });
+
   const handleSelectOrganization = (id: string) => {
     const handler: CheckboxOnChangeHandler = (_, checked) => {
       onSelectOrganization(id, checked);
@@ -63,56 +77,91 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
     return (address: string) => onEditOrganizationAddress(id, address);
   };
 
+  const virtualRows = virtualizer.getVirtualItems();
+
+  const tableGridTemplateColumns = "min-content 240px minmax(200px, auto) min-content";
+
   return (
-    <Table
-      sx={{
-        gridTemplateColumns: "auto minmax(auto, 240px) auto auto",
-        overflow: "clip",
-      }}
-    >
-      <Table.Head>
-        <Table.Row>
-          <Table.HeaderCell sx={stickyCellStyles}>
-            <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
-          </Table.HeaderCell>
-          <Table.HeaderCell sx={stickyCellStyles}>
-            <Typography>Компания</Typography>
-          </Table.HeaderCell>
-          <Table.HeaderCell sx={stickyCellStyles}>
-            <Typography>Адрес</Typography>
-          </Table.HeaderCell>
-          <Table.HeaderCell sx={stickyCellStyles}></Table.HeaderCell>
-        </Table.Row>
-      </Table.Head>
-      <Table.Body>
-        {organizations.map((organization) => {
-          const { id, name, address, isSelected } = organization;
+    <Box sx={{ border: "1px solid", borderColor: grey[500], borderRadius: "8px", overflow: "clip" }}>
+      <Table
+        ref={tableRef}
+        sx={{
+          tableLayout: "fixed",
 
-          const cellProps = {
-            sx: mergeSx(isSelected && selectedCellStyles, { minWidth: 0 }),
-          };
+          position: "relative",
+          height: `${virtualizer.getTotalSize() + 37}px`,
 
-          return (
-            <Table.Row key={id}>
-              <Table.DataCell {...cellProps}>
-                <Checkbox checked={isSelected} onChange={handleSelectOrganization(id)} />
-              </Table.DataCell>
-              <Table.DataCell {...cellProps}>
-                <EditableTextField text={name} onChange={handleEditOrganizationName(id)} />
-              </Table.DataCell>
-              <Table.DataCell {...cellProps}>
-                <EditableTextField text={address} onChange={handleEditOrganizationAddress(id)} />
-              </Table.DataCell>
-              <Table.DataCell {...cellProps}>
-                <Button variant="text" color="warning" size="small" onClick={handleDeleteOrganization(id)}>
-                  Удалить
-                </Button>
-              </Table.DataCell>
-            </Table.Row>
-          );
-        })}
-      </Table.Body>
-    </Table>
+          "th:not(:first-of-type), td:not(:first-of-type)": {
+            borderLeft: "1px solid",
+            borderLeftColor: grey[500],
+          },
+        }}
+      >
+        <Table.Head ref={tableHeaderRef} sx={stickyHeaderStyles}>
+          <Table.Row display="grid" gridAutoFlow="column" gridTemplateColumns={tableGridTemplateColumns}>
+            <Table.HeaderCell>
+              <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
+            </Table.HeaderCell>
+            <Table.HeaderCell>
+              <Typography>Компания</Typography>
+            </Table.HeaderCell>
+            <Table.HeaderCell>
+              <Typography>Адрес</Typography>
+            </Table.HeaderCell>
+            <Table.HeaderCell>
+              <Button variant="text" color="warning" size="small" sx={{ opacity: 0 }} tabIndex={-1}>
+                Удалить
+              </Button>
+            </Table.HeaderCell>
+          </Table.Row>
+        </Table.Head>
+        <Table.Body>
+          {virtualRows.map((virtualItem) => {
+            const { index, size, start } = virtualItem;
+            const { id, name, address, isSelected } = organizations[index];
+
+            const positionStyles: SxProps = {
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: `${size}px`,
+              // ! TODO сделать отдельный расчет высоты хедера
+              transform: `translateY(${start + 37}px)`,
+            };
+
+            const computedStyles = mergeSx(isSelected && selectedCellStyles, positionStyles);
+
+            return (
+              <Table.Row
+                key={id}
+                data-index={index}
+                ref={virtualizer.measureElement}
+                sx={computedStyles}
+                display="grid"
+                gridAutoFlow="column"
+                gridTemplateColumns={tableGridTemplateColumns}
+              >
+                <Table.DataCell>
+                  <Checkbox checked={isSelected} onChange={handleSelectOrganization(id)} />
+                </Table.DataCell>
+                <Table.DataCell>
+                  <EditableTextField text={name} onChange={handleEditOrganizationName(id)} />
+                </Table.DataCell>
+                <Table.DataCell display="grid">
+                  <EditableTextField text={address} onChange={handleEditOrganizationAddress(id)} />
+                </Table.DataCell>
+                <Table.DataCell>
+                  <Button variant="text" color="warning" size="small" onClick={handleDeleteOrganization(id)}>
+                    Удалить
+                  </Button>
+                </Table.DataCell>
+              </Table.Row>
+            );
+          })}
+        </Table.Body>
+      </Table>
+    </Box>
   );
 };
 
