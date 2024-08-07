@@ -1,37 +1,10 @@
 import { ChangeEventHandler, FC, FocusEventHandler, useState } from "react";
 
 import { useDebouncedCallback } from "@app/hooks";
-import { Box, SxProps, Typography } from "@mui/material";
-import { blue } from "@mui/material/colors";
+import { mergeSx } from "@app/lib";
+import { Box, Typography } from "@mui/material";
 
-const typographyStyles: SxProps = {
-  height: "22px",
-  paddingBottom: "1px",
-
-  fontSize: "16px",
-  lineHeight: "22px",
-  fontWeight: 400,
-  letterSpacing: "normal",
-
-  borderBottom: "2px solid",
-  borderColor: "transparent",
-};
-
-const inputResetStyles: SxProps = {
-  margin: 0,
-  padding: 0,
-  border: 0,
-  outline: 0,
-  whiteSpace: "normal",
-  background: "none",
-  width: "100%",
-
-  "&:focus-visible": {
-    borderColor: blue[600],
-  },
-
-  ...typographyStyles,
-};
+import * as styles from "./styles";
 
 type EditableFieldProps = {
   text: string;
@@ -71,7 +44,7 @@ const EditableTextField: FC<EditableFieldProps> = ({ text, onChange }) => {
     return (
       <Box
         component="input"
-        sx={inputResetStyles}
+        sx={styles.inputReset}
         onChange={handleChange}
         onFocus={handleInputFocus}
         onBlur={handleEndEditing}
@@ -83,14 +56,7 @@ const EditableTextField: FC<EditableFieldProps> = ({ text, onChange }) => {
 
   return (
     <Typography
-      sx={{
-        width: "100%",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-        cursor: "text",
-        ...typographyStyles,
-      }}
+      sx={mergeSx(styles.typography, styles.trimText)}
       onClick={handleStartEditing}
       onFocus={handleStartEditing}
       tabIndex={0}

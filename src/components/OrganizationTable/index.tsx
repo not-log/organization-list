@@ -3,10 +3,11 @@ import { ComponentProps, FC, useEffect, useRef, useState } from "react";
 import { mergeSx } from "@app/lib";
 import { Organization } from "@app/types";
 import { Checkbox, Table } from "@app/uikit";
-import { Box, Button, CircularProgress, SxProps, Typography } from "@mui/material";
+import { Box, Button, SxProps, Typography } from "@mui/material";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 
 import EditableTextField from "../EditableTextField";
+import LoadingTableRow from "./LoadingTableRow";
 import * as styles from "./styles";
 
 type CheckboxOnChangeHandler = ComponentProps<typeof Checkbox>["onChange"];
@@ -139,24 +140,7 @@ const OrganizationTable: FC<OrganizationTableProps> = ({
             );
           })}
 
-          {isLoading && (
-            <Table.Row
-              sx={{
-                position: "absolute",
-                bottom: 0,
-                display: "grid",
-                placeItems: "center",
-                width: "100%",
-                paddingBlock: "120px 32px",
-
-                background: "linear-gradient(0deg, #ffffff 20%, transparent 100%)",
-              }}
-            >
-              <Table.DataCell>
-                <CircularProgress />
-              </Table.DataCell>
-            </Table.Row>
-          )}
+          {isLoading && <LoadingTableRow />}
         </Table.Body>
       </Table>
     </Box>
