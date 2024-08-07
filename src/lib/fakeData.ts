@@ -4,10 +4,19 @@ import { fakerRU as faker } from "@faker-js/faker";
 const fakerLocation = faker.location;
 
 export const createOrganizationList = (count: number) => {
-  return faker.helpers.multiple(createOrganization, { count });
+  return faker.helpers.multiple(createRandomOrganization, { count });
 };
 
-function createOrganization(): Organization {
+export const createOrganization = (name: string, address: string): Organization => {
+  return {
+    id: faker.string.uuid(),
+    isSelected: false,
+    name,
+    address,
+  };
+};
+
+function createRandomOrganization(): Organization {
   const zipCode = fakerLocation.zipCode();
   const city = fakerLocation.city();
   const street = fakerLocation.streetAddress();

@@ -41,7 +41,7 @@ const organizationsSlice = createSlice({
         state.data[currentOrganizationIndex] = { ...oldOrganization, ...updatedParams };
       }
     },
-    update(state, action: PayloadAction<(typeof initialState)["data"]>) {
+    replace(state, action: PayloadAction<(typeof initialState)["data"]>) {
       state.data = action.payload;
     },
   },
